@@ -14,8 +14,10 @@ typedef struct Arc Arc;
 void liberation(Arc **ListeArc,int taille){
 	for (int i = 0; i < taille; i++){
 		free(ListeArc[i]);
+		ListeArc[i]=NULL;
 	}
 	free(ListeArc);
+	ListeArc=NULL;
 }
 
 Arc **SimpleAllocation(int taille){
@@ -55,7 +57,7 @@ void AssociationPoid(int Graphe[Taille][Taille],Arc **ListeArc){
 
 void AffichageArc(Arc **ListeArc,int TailleArc){
 	for (int i = 0; i < TailleArc; ++i){
-		printf("%c %c %d %d\n",ListeArc[i]->SommetDeDepart+'A',ListeArc[i]->SommetArrive+'A',ListeArc[i]->Poid,ListeArc[i]->Progression);
+		printf("%c | %c | %d | %d\n",ListeArc[i]->SommetDeDepart+'A',ListeArc[i]->SommetArrive+'A',ListeArc[i]->Poid,ListeArc[i]->Progression);
 	}
 	printf("\n");
 }
@@ -63,7 +65,7 @@ void AffichageArc(Arc **ListeArc,int TailleArc){
 int TotalInformation(int *SommetInformation,int taille){
 	int c=0;
 	for (int i = 0; i < taille; i++){
-		if(SommetInformation[i]!=0)c++;
+		if(SommetInformation[i]==0)c++;
 	}
 	return c;
 }
@@ -93,6 +95,14 @@ void AssociationSommet(int Graphe[Taille][Taille],Arc **ListeArc,int TailleArc){
 	}
 }
 
+Arc *TrouveArc(Arc **ListeArc,int TailleArc,int Debut,int Fin){
+	int i;
+	for (i = 0; i < TailleArc; i++){
+		if(ListeArc[i]->SommetDeDepart==Debut&&ListeArc[i]->SommetArrive==Fin)break;
+	}
+	return ListeArc[i];
+}
+
 int main(int argc, char *argv[])
 {
 	int Graphe[Taille][Taille]={{0,3,0,0,0,0,0},
@@ -102,7 +112,7 @@ int main(int argc, char *argv[])
 								{0,0,0,0,0,1,0},
 								{0,0,0,0,0,0,4},
 								{0,5,2,0,0,0,0}};
-	int TailleArc=NombreDArc(Graphe);
+	int TailleArc=NombreDArc(Graphe),Temps=0;
 	printf("%d\n",TailleArc);
 	Arc **ListeArc=SimpleAllocation(TailleArc);
 	int SommetInformation[Taille]={0};
@@ -110,20 +120,27 @@ int main(int argc, char *argv[])
 	AssociationPoid(Graphe,ListeArc);
 	AssociationSommet(Graphe,ListeArc,TailleArc);
 	AffichageArc(ListeArc,TailleArc);
-	return 0;
+	SommetInformation[0]=1;
 	while(TotalInformation(SommetInformation,Taille)!=0){
+		Temps++;
+		printf("||||||| Resultat fin de temps=%d |||||||\n",Temps);
 		for (int i = 0; i < Taille; i++){
 			if(SommetInformation[i]!=0){
 				for (int j = 0; j < Taille; j++){
 					if(Graphe[i][j]!=0){
-						if(SommetInformation[j]!=0){
-							printf("Progression entre %c et %c",i+'A',j+'A');
-
+						if(SommetInformation[j]==0){
+							printf("Progression de %c vers %c\n",i+'A',j+'A');
+							if(TrouveArc(ListeArc,TailleArc,i,j)->Progression!=TrouveArc(ListeArc,TailleArc,i,j)->Poid) (TrouveArc(ListeArc,TailleArc,i,j)->Progression)++;
+							else if(SommetInformation[j]==0){
+								SommetInformation[j]=1;
+								printf("Le sommet %c à recu l'information\n",j+'A');
+							}
 						}
 					}
 				}
 			}
 		}
+		AffichageArc(ListeArc,TailleArc);
 	}
 
 	liberation(ListeArc,TailleArc);
